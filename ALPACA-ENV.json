@@ -1,0 +1,27 @@
+{
+	"id": "6c284971-8066-44b9-8a4d-0661b3aea9bd",
+	"name": "ALPACA-TRADING",
+	"values": [
+		{
+			"key": "url",
+			"value": "https://paper-api.alpaca.markets/v2",
+			"type": "default",
+			"enabled": true
+		},
+		{
+			"key": "key",
+			"value": "",
+			"type": "secret",
+			"enabled": true
+		},
+		{
+			"key": "secret_key",
+			"value": "",
+			"type": "secret",
+			"enabled": true
+		}
+	],
+	"_postman_variable_scope": "environment",
+	"_postman_exported_at": "2026-11-16T15:28:26.607Z",
+	"_postman_exported_using": "Postman/11.43.0"
+}

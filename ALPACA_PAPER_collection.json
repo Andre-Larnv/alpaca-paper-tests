@@ -1,0 +1,443 @@
+{
+	"info": {
+		"_postman_id": "06de3257-94e1-4868-a698-c1b074b265f0",
+		"name": "ALPACA_PAPER_DEMO",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "19940534",
+		"_collection_link": "https://dark-firefly-837975.postman.co/workspace/My-Workspace~800fd3a1-a3dd-400f-8e53-f4d046658339/collection/19940534-06de3257-94e1-4868-a698-c1b074b265f0?action=share&source=collection_link&creator=19940534"
+	},
+	"item": [
+		{
+			"name": "#1 - auth + acc",
+			"item": [
+				{
+					"name": "get_acc positive",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"pm.test(\"Response time is less than 1s\", function () {",
+									"    pm.expect(pm.response.responseTime).to.be.below(1000);",
+									"});",
+									"let response = pm.response.json();",
+									"let accData = {",
+									"    id: response.id,",
+									"    account_number: response.account_number,",
+									"    status: response.status,",
+									"    crypto_status: response.crypto_status,",
+									"    currency: response.currency,",
+									"    trade_suspended_by_user: response.trade_suspended_by_user,",
+									"    account_blocked: response.account_blocked,",
+									"    trading_blocked: response.trading_blocked,",
+									"    transfers_blocked: response.transfers_blocked,",
+									"    created_at: response.created_at,",
+									"}",
+									"pm.collectionVariables.set(\"accData\", accData);",
+									"let accBalanceData = {",
+									"    cash: response.cash,",
+									"    buying_power: response.buying_power,",
+									"    regt_buying_power: response.regt_buying_power,",
+									"    non_marginable_buying_power: response.non_marginable_buying_power,",
+									"    effective_buying_power: response.effective_buying_power,",
+									"    options_buying_power: response.options_buying_power,",
+									"    portfolio_value: response.portfolio_value,",
+									"    equity: response.equity,",
+									"    last_equity: response.last_equity,",
+									"    balance_asof: response.balance_asof,",
+									"}",
+									"pm.collectionVariables.set(\"accBalanceData\", accBalanceData);",
+									"let marginData = {",
+									"    long_market_value: response.long_market_value,",
+									"    short_market_value: response.short_market_value,",
+									"    position_market_value: response.position_market_value,",
+									"    initial_margin: response.initial_margin,",
+									"    maintenance_margin: response.maintenance_margin,",
+									"    last_maintenance_margin: response.last_maintenance_margin,",
+									"}",
+									"pm.collectionVariables.set(\"marginData\", marginData);",
+									"",
+									"const expectedAccData = {",
+									"    status: \"ACTIVE\",",
+									"    currency: \"USD\",",
+									"    account_blocked: false,",
+									"    trading_blocked: false,",
+									"}",
+									"Object.entries(expectedAccData).forEach(([field, value]) => {",
+									"    pm.test(`${field} = ${value}`, () => pm.expect(accData[field]).to.eql(value));",
+									"});",
+									"pm.test(`id (${accData.id}) is a valid UUID`, function () {",
+									"    pm.expect(accData.id).to.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i);",
+									"});",
+									"pm.test(`account_number (${accData.account_number}) is a non-empty string`, function () {",
+									"    pm.expect(accData.account_number).to.be.a(\"string\").and.not.empty;",
+									"});",
+									"const moneyFields = [\"cash\", \"buying_power\", \"regt_buying_power\", \"non_marginable_buying_power\", \"portfolio_value\", \"equity\", \"last_equity\"];",
+									"moneyFields.forEach(function (field) {",
+									"    pm.test(`${field} is a numeric string`, function () {",
+									"        pm.expect(accBalanceData[field]).to.match(/^-?\\d+(\\.\\d+)?$/);",
+									"    });",
+									"});",
+									"",
+									"pm.test(`created_at (${accData.created_at}) is a valid datetime`, function () {",
+									"    pm.expect(accData.created_at).to.match(/^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\.\\d+)?Z$/);",
+									"});",
+									"pm.test(`balance_asof (${accBalanceData.balance_asof}) matches YYYY-MM-DD`, function () {",
+									"    pm.expect(accBalanceData.balance_asof).to.match(/^\\d{4}-\\d{2}-\\d{2}$/);",
+									"});",
+									"",
+									"const marginFields = [\"long_market_value\", \"short_market_value\", \"position_market_value\", \"initial_margin\", \"maintenance_margin\", \"last_maintenance_margin\"];",
+									"marginFields.forEach(function (field) {",
+									"    pm.test(`${field} is a numeric string`, function () {",
+									"        pm.expect(marginData[field]).to.match(/^-?\\d+(\\.\\d+)?$/);",
+									"    });",
+									"});",
+									"",
+									"pm.test(\"buying_power is positive\", function () {",
+									"    pm.expect(Number(accBalanceData.buying_power)).to.be.above(0);",
+									"});",
+									"",
+									"pm.test(\"portfolio_value equals equity\", function () {",
+									"    pm.expect(Number(accBalanceData.portfolio_value)).to.be.closeTo(Number(accBalanceData.equity), 0.01);",
+									"});",
+									"",
+									"pm.test(\"equity = cash + long_market_value + short_market_value\", function () {",
+									"    const expected = Number(accBalanceData.cash) + Number(marginData.long_market_value) + Number(marginData.short_market_value);",
+									"    pm.expect(Number(accBalanceData.equity)).to.be.closeTo(expected, 0.01);",
+									"});",
+									"",
+									"pm.test(\"long_market_value >= 0 and short_market_value <= 0\", function () {",
+									"    pm.expect(Number(marginData.long_market_value)).to.be.at.least(0);",
+									"    pm.expect(Number(marginData.short_market_value)).to.be.at.most(0);",
+									"});",
+									"",
+									"pm.test(\"margin requirements are not negative\", function () {",
+									"    pm.expect(Number(marginData.initial_margin)).to.be.at.least(0);",
+									"    pm.expect(Number(marginData.maintenance_margin)).to.be.at.least(0);",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{url}}/account",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"account"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "get_acc negative",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"pm.request.headers.upsert({ key: 'APCA-API-KEY-ID', value: 'invalid-key-example' });",
+									"pm.request.headers.upsert({ key: 'APCA-API-SECRET-KEY', value: 'invalid-secret-key-example' });"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 401\", function () {",
+									"    pm.response.to.have.status(401);",
+									"});",
+									"",
+									"pm.test(\"Response time is less than 1s\", function () {",
+									"    pm.expect(pm.response.responseTime).to.be.below(1000);",
+									"});",
+									"",
+									"const response = pm.response.json();",
+									"",
+									"pm.test(\"Error message is a non-empty string\", function () {",
+									"    pm.expect(response.message).to.be.a(\"string\").and.not.empty;",
+									"});",
+									"",
+									"pm.test(\"No account data displayed\", function () {",
+									"    [\"id\", \"account_number\", \"cash\", \"buying_power\", \"equity\"].forEach(function (field) {",
+									"        pm.expect(response).to.not.have.property(field);",
+									"    });",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{url}}/account",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"account"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "get_acc no auth",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"pm.request.headers.remove('APCA-API-KEY-ID');",
+									"pm.request.headers.remove('APCA-API-SECRET-KEY');"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 401\", function () {",
+									"    pm.response.to.have.status(401);",
+									"});",
+									"",
+									"pm.test(\"Response time is less than 1s\", function () {",
+									"    pm.expect(pm.response.responseTime).to.be.below(1000);",
+									"});",
+									"",
+									"const response = pm.response.json();",
+									"",
+									"pm.test(\"Error message is a non-empty string\", function () {",
+									"    pm.expect(response.message).to.be.a(\"string\").and.not.empty;",
+									"});",
+									"",
+									"pm.test(\"No account data displayed\", function () {",
+									"    [\"id\", \"account_number\", \"cash\", \"buying_power\", \"equity\"].forEach(function (field) {",
+									"        pm.expect(response).to.not.have.property(field);",
+									"    });",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{url}}/account",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"account"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "get_acc no auth key",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"pm.request.headers.remove('APCA-API-SECRET-KEY');"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 401\", function () {",
+									"    pm.response.to.have.status(401);",
+									"});",
+									"",
+									"pm.test(\"Response time is less than 1s\", function () {",
+									"    pm.expect(pm.response.responseTime).to.be.below(1000);",
+									"});",
+									"",
+									"const response = pm.response.json();",
+									"",
+									"pm.test(\"Error message is a non-empty string\", function () {",
+									"    pm.expect(response.message).to.be.a(\"string\").and.not.empty;",
+									"});",
+									"",
+									"pm.test(\"No account data displayed\", function () {",
+									"    [\"id\", \"account_number\", \"cash\", \"buying_power\", \"equity\"].forEach(function (field) {",
+									"        pm.expect(response).to.not.have.property(field);",
+									"    });",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{url}}/account",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"account"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "get_acc no auth secret",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"pm.request.headers.remove('APCA-API-KEY-ID');",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 401\", function () {",
+									"    pm.response.to.have.status(401);",
+									"});",
+									"",
+									"pm.test(\"Response time is less than 1s\", function () {",
+									"    pm.expect(pm.response.responseTime).to.be.below(1000);",
+									"});",
+									"",
+									"const response = pm.response.json();",
+									"",
+									"pm.test(\"Error message is a non-empty string\", function () {",
+									"    pm.expect(response.message).to.be.a(\"string\").and.not.empty;",
+									"});",
+									"",
+									"pm.test(\"No account data displayed\", function () {",
+									"    [\"id\", \"account_number\", \"cash\", \"buying_power\", \"equity\"].forEach(function (field) {",
+									"        pm.expect(response).to.not.have.property(field);",
+									"    });",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{url}}/account",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"account"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "#2 - market + assets",
+			"item": []
+		},
+		{
+			"name": "#3 - orders",
+			"item": []
+		},
+		{
+			"name": "#4 - positions",
+			"item": []
+		},
+		{
+			"name": "#5 - E2E flow",
+			"item": []
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					"pm.request.headers.upsert({ key: 'APCA-API-KEY-ID', value: (pm.environment.get('key') || '').trim() });",
+					"pm.request.headers.upsert({ key: 'APCA-API-SECRET-KEY', value: (pm.environment.get('secret_key') || '').trim() });"
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "accData",
+			"value": ""
+		},
+		{
+			"key": "accBalanceData",
+			"value": ""
+		},
+		{
+			"key": "tradingData",
+			"value": ""
+		},
+		{
+			"key": "marginData",
+			"value": ""
+		}
+	]
+}
